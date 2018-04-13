@@ -16,7 +16,6 @@ class JogController:
         self.gamepad.on('l2', self.cancel_jog)
         self.gamepad.on('btn11', self.toggle_stepping)
 
-
         self.step_size = 0.1 # mm
         self.max_feedrate = 1000
         self.loop_delay = 0.02
@@ -53,9 +52,12 @@ class JogController:
     def _do_jog(self):
         sleep(0.005)
         
+        # create vector from controller inputs (invert Y)
+
         v = V(
             self.gamepad.axis('lx'), 
-            -self.gamepad.axis('ly')
+            -self.gamepad.axis('ly'),
+            -self.gamepad.axis('ry'),
         )
 
         
@@ -70,7 +72,7 @@ class JogController:
 
         feedrate = v.length * self.max_feedrate
         delta = v.normal * self.step_size
-        cmd = self.grbl.jog(int(feedrate), x=delta.x, y=delta.y)
+        cmd = self.grbl.jog(int(feedrate), x=delta.x, y=delta.y, z=delta.z)
         self.grbl.enqueue(cmd.encode())
 
 
