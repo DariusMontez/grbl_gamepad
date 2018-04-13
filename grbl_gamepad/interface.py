@@ -4,6 +4,7 @@
 
 from queue import Queue
 from threading import Thread, Lock
+from time import sleep
 
 
 class Grbl:
@@ -148,6 +149,8 @@ class Grbl:
     def on_connect(self):
         print("Grbl booted up!")
 
+        #sleep(3)
+        
         self._planner_cleared()
 
         self.query_status()
@@ -163,10 +166,11 @@ class Grbl:
         print("settings message: ${} = {}".format(k, v))
 
     def on_response_message(self, message):
-        if message == 'ok':
-            #cmd = self.last_command
+
+        def consume_res():
             if self.response_queue.empty():
                 print("Received and un-called-for 'ok' response")
+                return
 
             cmd = self.response_queue.get()
 
@@ -179,8 +183,11 @@ class Grbl:
                 self._planner_cleared()
 
             self.response_queue.task_done()
-            
+        
+        consume_res()
 
+        if message == 'ok':
+            pass
         elif 'error' in message:
             errno = message.split(':')[1]
             print("ERR: {}".format(errno))
