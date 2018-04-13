@@ -12,10 +12,6 @@ from interface import Grbl
 class JogController:
 
     def __init__(self, grbl):
-        self.gamepad = Gamepad()
-        self.gamepad.on('l2', self.cancel_jog)
-        self.gamepad.on('btn11', self.toggle_stepping)
-
         self.step_size = 0.1 # mm
         self.max_feedrate = 1000
         self.loop_delay = 0.02
@@ -23,6 +19,12 @@ class JogController:
         self.jogging = False
         self.stepping = False
         self.grbl = grbl
+    
+        self.gamepad = Gamepad()
+        self.gamepad.on('l2',       self.cancel_jog)
+        self.gamepad.on('btn11',    self.toggle_stepping) # left axis btn
+        self.gamepad.on('select',   lambda *a: self.grbl.soft_reset())
+        self.gamepad.on('start',    lambda *a: self.grbl.unlock())
     
     def start(self):
         self._running = True
@@ -81,7 +83,11 @@ if __name__ == '__main__':
     s = Serial(port='/dev/ttyACM0', baudrate=115200)
 
     grbl = Grbl(serial=s)
-    sleep(2)
+    sleep(2.5)
+
+    if grbl.status['mode'] == 'alarm':
+        print("GRBL is locked!")
+
     #grbl.enqueue(b'$N0=G20')
     #grbl.toggle_check_mode()
     #sleep(0.5)
@@ -89,7 +95,7 @@ if __name__ == '__main__':
 
     #grbl.toggle_check_mode()
 
-    grbl.unlock()
+    
 
     j = JogController(grbl)
     j.start()
