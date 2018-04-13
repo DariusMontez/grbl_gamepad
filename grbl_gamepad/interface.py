@@ -124,6 +124,8 @@ class Grbl:
         #self._serial_write_safe(command + b'\n')
         self.enqueue(command)
 
+    # command wrappers
+
     def toggle_check_mode(self):
         self.enqueue(b'$C')
 
@@ -136,6 +138,9 @@ class Grbl:
 
     def query_settings(self):
         self.send_realtime(b'$$')
+
+    def soft_reset(self):
+        self.send_realtime(b'\x18')
 
 
     # events
