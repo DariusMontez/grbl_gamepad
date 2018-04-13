@@ -4,6 +4,7 @@
 import sys
 import click
 
+from grbl_gamepad.jog_controller import main as jog
 
 @click.command()
 def main(args=None):
@@ -11,6 +12,9 @@ def main(args=None):
     click.echo("Replace this message by putting your code into "
                "grbl_gamepad.cli.main")
     click.echo("See click documentation at http://click.pocoo.org/")
+
+    jog()
+
     return 0
 
 

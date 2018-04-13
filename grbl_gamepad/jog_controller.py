@@ -6,7 +6,7 @@ from threading import Thread
 from physics.vector import Vector as V
 from gamepad import Gamepad
 
-from interface import Grbl
+from grbl_gamepad.interface import Grbl
 
 
 class JogController:
@@ -78,8 +78,7 @@ class JogController:
         self.grbl.enqueue(cmd.encode())
 
 
-
-if __name__ == '__main__':
+def main():
     s = Serial(port='/dev/ttyACM0', baudrate=115200)
 
     grbl = Grbl(serial=s)
@@ -101,3 +100,6 @@ if __name__ == '__main__':
     j.start()
     
     input("Press ENTER to quit")
+
+if __name__ == '__main__':
+    main()
