@@ -7,7 +7,7 @@ import pytest
 
 from click.testing import CliRunner
 
-from grbl_gamepad import grbl_gamepad
+from grbl_gamepad.interface import Grbl
 from grbl_gamepad import cli
 
 
