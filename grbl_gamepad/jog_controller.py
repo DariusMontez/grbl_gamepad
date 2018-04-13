@@ -1,11 +1,12 @@
 
 from serial import Serial
 from time import sleep
+from threading import Thread
 
 from physics.vector import Vector as V
 from gamepad import Gamepad
 
-from grbl_gamepad import Grbl
+from interface import Grbl
 
 
 class JogController:
@@ -13,10 +14,12 @@ class JogController:
     def __init__(self, grbl):
         self.gamepad = Gamepad()
         self.gamepad.on('l2', self.cancel_jog)
+        self.gamepad.on('btn11', self.toggle_stepping)
+
 
         self.step_size = 0.1 # mm
         self.max_feedrate = 1000
-        self.loop_delay = 0.005
+        self.loop_delay = 0.02
 
         self.jogging = False
         self.stepping = False
@@ -38,6 +41,10 @@ class JogController:
             if self.gamepad.connected:
                 self._do_jog()
 
+    def toggle_stepping(self, *a):
+        self.stepping = not self.stepping
+        print("stepping: {}".format(self.stepping))
+
     def cancel_jog(self, *a):
         print("cancel jog (0x85)")
         self.grbl.send_realtime(b'\x85')
@@ -51,7 +58,10 @@ class JogController:
             -self.gamepad.axis('ly')
         )
 
+        
         if v.length > 1e-5:
+            if self.stepping and self.jogging:
+                return
             self.jogging = True
         else:
             if self.jogging:
@@ -60,15 +70,7 @@ class JogController:
 
         feedrate = v.length * self.max_feedrate
         delta = v.normal * self.step_size
-
-        #cmd = "$J=G91G21X{d.x:0.2f}Y{d.y:0.2f}F{feedrate:d}".format(
-        #        d=delta,
-        #        feedrate=int(feedrate))
-
-       
         cmd = self.grbl.jog(int(feedrate), x=delta.x, y=delta.y)
-
-        # print(cmd)
         self.grbl.enqueue(cmd.encode())
 
 
@@ -85,7 +87,7 @@ if __name__ == '__main__':
 
     #grbl.toggle_check_mode()
 
-    #grbl.unlock()
+    grbl.unlock()
 
     j = JogController(grbl)
     j.start()
