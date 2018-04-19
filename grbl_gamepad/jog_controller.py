@@ -3,7 +3,7 @@ from serial import Serial
 from time import sleep
 from threading import Thread
 
-from physics.vector import Vector as V
+from easy_vector import Vector as V
 from gamepad import Gamepad
 
 from grbl_gamepad.interface import Grbl
