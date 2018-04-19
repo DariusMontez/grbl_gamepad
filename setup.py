@@ -11,8 +11,15 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-with open('requirements.txt') as requirements_file:
-    requirements = [line for line in requirements_file]
+#with open('requirements.txt') as requirements_file:
+#    requirements = [line for line in requirements_file]
+
+requirements = [
+    'Click>=6.0',
+    'pyserial>=3.0',
+    'easy_vector>=0.1.0',
+    'gamepad>=0.1.0'
+]
 
 setup_requirements = ['pytest-runner', ]
 
