@@ -15,22 +15,29 @@ class ProtocolBase:
     def add_message_handler(self, handler):
         self.message_handlers.append(handler)
 
-    def start_thread(self):
+    def start(self):
+        self._running = True
         self.thread = Thread(target=self.run)
         self.thread.daemon = True
         self.thread.start()
 
+    def stop(self):
+        self._running = False
+        self.thread.join()
+        del self.thread
+
     def enqueue(self, command):
         # add a newline and encode the command string into bytes
         # all Grbl commands exist in the ASCII charset
+        if isinstance(command, bytes):
+            command_bytes = command
+        else:
+            command_bytes = command.encode('UTF-8')
 
-        command += "\n"
-        command_bytes = command.encode()
-
-        self.send_queue.put(command_bytes)
+        self.send_queue.put(command_bytes + b'\n')
 
     def run(self):
-        while True:
+        while self._running:
             self._process_serial()
             self._process_queue()
     
@@ -42,9 +49,14 @@ class ProtocolBase:
     def _process_serial(self):
         if self.serial.in_waiting > 0:
             line = self.serial.readline()
-            line = line.decode('utf-8')
+            try:
+                line = line.decode('utf-8')
+            except UnicodeDecodeError as e:
+                print(e)
+                return
+
             line = line.strip()
-            print("RECV: {}".format(line))
+            # print("RECV: {}".format(line))
             if line:
                 message = parse_line(line)
 
@@ -75,23 +87,44 @@ class CharacterCountProtocol(ProtocolBase):
             self.planner_size -= len(command)
 
             if self.planner_size < 0:
-                raise Exception("planner size is negative")
+                raise Exception("planner size is negative: {}".format(self.planner_size))
 
             self.response_queue.task_done()
 
-    def _process_queue(self, send_queue):
+    def _process_queue(self):
 
         # process queue
-        if not send_queue.empty():
+        if not self.send_queue.empty():
 
-            command = send_queue.get()
+            command = self.send_queue.get()
             predicted_planner_size = self.planner_size + len(command)
             
             if predicted_planner_size < self.MAX_PLANNER_SIZE:
                 
                 self._serial_write_safe(command)
+                self.planner_size = predicted_planner_size
                 print("SEND: {}\tplanner size: {}".format(command, self.planner_size))
-                send_queue.task_done()
+                self.send_queue.task_done()
 
                 # now that the command has been sent, store it until an "ok" is received
                 self.response_queue.put(command)
+
+class SimpleProtocol(ProtocolBase):
+
+    def __init__(self, *a, **kw):
+        super().__init__(*a, **kw)
+
+        self.clear_to_send = True
+        self.add_message_handler(self._message_handler)
+
+    def _message_handler(self, message):
+        if isinstance(message, ResponseMessage):
+            self.clear_to_send = True
+
+    def _process_queue(self):
+        if not self.send_queue.empty() and self.clear_to_send:
+            command = self.send_queue.get()
+            self._serial_write_safe(command)
+            print("SEND: {}".format(command))
+            self.send_queue.task_done()
+            self.clear_to_send = False

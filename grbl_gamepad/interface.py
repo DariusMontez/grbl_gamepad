@@ -86,7 +86,12 @@ class GrblState:
 
         self.alarm_state = None
 
-        self.status = {}
+        self.status = {
+            'mode': None,
+            'WCO': None,
+            'MPos': None,
+            'FS': None
+        }
 
         self.settings = {}
         
@@ -116,18 +121,31 @@ class GrblState:
 
 class Grbl:
 
-    def __init__(self, serial, protocol=CharacterCountProtocol):
+    def __init__(self, serial, protocol=SimpleProtocol, debug=False):
 
         self.state = GrblState()
 
         self.protocol = protocol(serial)
         self.protocol.add_message_handler(self.state.message_handler)
-        self.protocol.add_message_handler(debug_message_handler)
+        if debug:
+            self.protocol.add_message_handler(debug_message_handler)
+        
+        self.start()
+        
+    def start(self):
+        self.protocol.start()
 
-        self.protocol.start_thread()
+    def stop(self):
+        self.protocol.stop()
 
     def send(self, command):
         self.protocol.enqueue(command)
+
+    def add_message_handler(self, handler):
+        def wrapper(message):
+            handler(message, self)
+
+        self.protocol.add_message_handler(wrapper)
 
     @property
     def version(self):
@@ -164,10 +182,10 @@ class Grbl:
         self.send('$$')
 
     def soft_reset(self):
-        self.send('\x18')
+        self.send(b'\x18')
 
     def jog_cancel(self):
-        self.send('\x85')
+        self.send(b'\x85')
 
     
     # G-code functions

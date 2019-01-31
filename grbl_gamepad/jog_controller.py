@@ -7,6 +7,8 @@ from easy_vector import Vector as V
 from gamepad import Gamepad
 
 from grbl_gamepad.interface import Grbl
+from grbl_gamepad.messages import *
+from grbl_gamepad.protocol import SimpleProtocol
 
 
 class JogController:
@@ -79,19 +81,31 @@ class JogController:
             return
 
         feedrate = int(v.length * self.max_feedrate)
-        delta = v.normal * self.step_size
+        step_size_mod = self.step_size * (feedrate / self.max_feedrate)
+        delta = v.normal * step_size_mod
         
         self.grbl.jog(feedrate, x=delta.x, y=delta.y, z=delta.z)
 
 
+def message_handler(message, grbl):
+    if isinstance(message, WelcomeMessage):
+        grbl.query_status()
+        #grbl.query_settings()
+    elif isinstance(message, StatusMessage):
+        if grbl.status['mode'] == 'Alarm':
+            print("Grbl is locked!")
+
 def main():
     s = Serial(port='/dev/ttyACM0', baudrate=115200)
 
-    grbl = Grbl(s)
-    sleep(2.5)
+    grbl = Grbl(s, protocol=SimpleProtocol, debug=True)
+    grbl.add_message_handler(message_handler)
 
-    if grbl.status['mode'] == 'alarm':
-        print("GRBL is locked!")
+    # while not grbl.status['mode']:
+    #     pass
+
+    # if grbl.status['mode'] == 'Alarm':
+    #     print("GRBL is locked!")
 
     #grbl.enqueue(b'$N0=G20')
     #grbl.toggle_check_mode()
@@ -99,7 +113,6 @@ def main():
     #grbl.request_settings()
 
     #grbl.toggle_check_mode()
-
     
 
     j = JogController(grbl)
