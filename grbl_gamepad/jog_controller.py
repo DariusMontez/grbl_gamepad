@@ -25,6 +25,8 @@ class JogController:
         self.gamepad.on('btn11',    self.toggle_stepping) # left axis btn
         self.gamepad.on('select',   lambda *a: self.grbl.soft_reset())
         self.gamepad.on('start',    lambda *a: self.grbl.unlock())
+        self.gamepad.on('dpady',  self.on_dpady)
+        
     
     def start(self):
         self._running = True
@@ -48,9 +50,13 @@ class JogController:
 
     def cancel_jog(self, *a):
         print("cancel jog (0x85)")
-        self.grbl.send_realtime(b'\x85')
+        self.grbl.jog_cancel()
         self.jogging = False
 
+    def on_dpady(self, value, event):
+        self.max_feedrate *= (1 - 0.1*value)
+        print("max feedrate: {}".format(self.max_feedrate))
+    
     def _do_jog(self):
         sleep(0.005)
         
@@ -72,16 +78,16 @@ class JogController:
                 self.cancel_jog()
             return
 
-        feedrate = v.length * self.max_feedrate
+        feedrate = int(v.length * self.max_feedrate)
         delta = v.normal * self.step_size
-        cmd = self.grbl.jog(int(feedrate), x=delta.x, y=delta.y, z=delta.z)
-        self.grbl.enqueue(cmd.encode())
+        
+        self.grbl.jog(feedrate, x=delta.x, y=delta.y, z=delta.z)
 
 
 def main():
     s = Serial(port='/dev/ttyACM0', baudrate=115200)
 
-    grbl = Grbl(serial=s)
+    grbl = Grbl(s)
     sleep(2.5)
 
     if grbl.status['mode'] == 'alarm':
