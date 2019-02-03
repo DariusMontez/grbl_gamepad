@@ -6,7 +6,7 @@ from time import sleep
 
 from .parser import parse_line
 from .messages import *
-from .protocol import CharacterCountProtocol
+from .protocol import CharacterCountProtocol, SimpleProtocol
 
 
 """
