@@ -82,18 +82,42 @@ grbl = Grbl(s, protocol=SimpleProtocol, debug=True)
 while not grbl.version:
         pass
 
-grbl.unlock()
+grbl.query_status()
 
+while not grbl.status['mode']:
+    pass
+
+if grbl.status['mode'] == 'Alarm':
+    grbl.unlock()
+
+
+# The entire file will be enqeued
 for line in f:
         line = line.strip()
-        print(repr(line))
+        #print(repr(line))
         grbl.send(line)
+
+print("The program has been queued and will be run. Pause with CTRL-C")
+
+# Wait until every line is sent
+while not grbl.protocol.send_queue.empty():
+    try:
+        pass
+    except KeyboardInterrupt:
+        # use CTRL-C to halt Grbl
+        #grbl.stop() # stop processing send queue; stop receiving messages
+        grbl.send(b"!") # feed hold
+
+        print("Press ENTER to resume the program")
+        input("")
+
+        grbl.send(b"~")
+        #grbl.start()
 
 # Wait for user input after streaming is completed
 print("G-code streaming finished!\n")
 print("WARNING: Wait until grbl completes buffered g-code blocks before exiting.")
 input("  Press <Enter> to exit and disable grbl.") 
-
 # Close file and serial port
 f.close()
 s.close()
