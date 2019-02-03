@@ -23,23 +23,29 @@ class JogController:
         self.grbl = grbl
     
         self.gamepad = Gamepad()
-        self.gamepad.on('l2',       self.cancel_jog)
+
+        # Feed hold
+        self.gamepad.on('l1',       lambda *a: grbl.send(b'!'))
+
+        # Resume cycle
+        self.gamepad.on('l2',       lambda *a: grbl.send(b'~'))
+
         self.gamepad.on('btn11',    self.toggle_stepping) # left axis btn
-        self.gamepad.on('select',   lambda *a: self.grbl.soft_reset())
-        self.gamepad.on('start',    lambda *a: self.grbl.unlock())
+        self.gamepad.on('select',   lambda *a: grbl.soft_reset())
+        self.gamepad.on('start',    lambda *a: grbl.unlock())
         self.gamepad.on('dpady',    self.on_dpady)
         
         # zero X-axis work coordinates
         self.gamepad.on('btn2',     
-            lambda *a: self.grbl.set_active_coordinate_system(x=0)
+            lambda *a: grbl.set_active_coordinate_system(x=0))
         
         # zero Y-axis work coordinates
         self.gamepad.on('btn1',     
-            lambda *a: self.grbl.set_active_coordinate_system(y=0)
+            lambda *a: self.grbl.set_active_coordinate_system(y=0))
         
         # zero Z-axis work coordinates
         self.gamepad.on('btn3',     
-            lambda *a: self.grbl.set_active_coordinate_system(z=0)
+            lambda *a: self.grbl.set_active_coordinate_system(z=0))
     
     def start(self):
         self._running = True
