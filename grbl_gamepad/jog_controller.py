@@ -6,9 +6,9 @@ from threading import Thread
 from easy_vector import Vector as V
 from gamepad import Gamepad
 
-from grbl_gamepad.interface import Grbl
-from grbl_gamepad.messages import *
-from grbl_gamepad.protocol import SimpleProtocol
+from grbl_link.interface import Grbl
+from grbl_link.messages import *
+from grbl_link.protocol import SimpleProtocol
 
 
 class JogController:
