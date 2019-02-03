@@ -18,8 +18,8 @@ requirements = [
     'Click>=6.0',
     'pyserial>=3.0',
     'easy_vector>=0.1.0',
-    'gamepad>=0.1.0',
-    'grbl-link>=0.1.0',
+    'gamepad>=0.1.1',
+    'grbl-link>=0.1.2',
 ]
 
 setup_requirements = ['pytest-runner', ]
