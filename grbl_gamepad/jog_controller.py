@@ -37,15 +37,15 @@ class JogController:
         
         # zero X-axis work coordinates
         self.gamepad.on('btn2',     
-            lambda *a: grbl.set_active_coordinate_system(x=0))
+            lambda *a: grbl.set_active_coord_system(x=0))
         
         # zero Y-axis work coordinates
         self.gamepad.on('btn1',     
-            lambda *a: self.grbl.set_active_coordinate_system(y=0))
+            lambda *a: self.grbl.set_active_coord_system(y=0))
         
         # zero Z-axis work coordinates
         self.gamepad.on('btn3',     
-            lambda *a: self.grbl.set_active_coordinate_system(z=0))
+            lambda *a: self.grbl.set_active_coord_system(z=0))
     
     def start(self):
         self._running = True

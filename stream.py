@@ -38,9 +38,9 @@ import time
 import sys
 import argparse
 
-from grbl_gamepad.interface import Grbl
-from grbl_gamepad.protocol import SimpleProtocol
-from grbl_gamepad.messages import *
+from grbl_link.interface import Grbl
+from grbl_link.protocol import SimpleProtocol
+from grbl_link.messages import *
 
 
 # Define command line argument interface
@@ -100,15 +100,16 @@ for line in f:
 print("The program has been queued and will be run. Pause with CTRL-C")
 
 # Wait until every line is sent
-while not grbl.protocol.send_queue.empty():
+while True: 
     try:
-        pass
+        if grbl.protocol.send_queue.empty():
+            break
     except KeyboardInterrupt:
         # use CTRL-C to halt Grbl
         #grbl.stop() # stop processing send queue; stop receiving messages
         grbl.send(b"!") # feed hold
 
-        print("Press ENTER to resume the program")
+        print("Press ENTER to resume the program. Press CTRL-D to quit the program.")
         input("")
 
         grbl.send(b"~")
